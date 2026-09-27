@@ -1,0 +1,20 @@
+.mcp.json
+  h_1dd7bb9db9f819 1-8
+components.json
+  h_1dd7bb9db9f819 1-25
+src/components/ui/button.tsx
+  h_1dd7bb9db9f819 1-55
+src/lib/utils.ts
+  h_1dd7bb9db9f819 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f3db96e25e2d3fb64e57c8b372aa9301becc88a3",
+  "prompts": {},
+  "humans": {
+    "h_1dd7bb9db9f819": {
+      "author": "Vivek Dahiya <vivekdahiya312@gmail.com>"
+    }
+  }
+}
