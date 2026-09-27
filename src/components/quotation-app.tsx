@@ -27,6 +27,7 @@ const EMPTY_CLIENT: ClientDetails = {
 
 export default function QuotationApp() {
   const [step, setStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [config, setConfig] = useState<QuoteConfig>({});
   const [activeService, setActiveService] = useState<string | null>(null);
@@ -98,11 +99,25 @@ export default function QuotationApp() {
     }
   };
 
+  const isStepComplete = (stepNumber: number) => {
+    if (stepNumber === 1) return selected.length > 0;
+    if (stepNumber === 2) return selected.length > 0;
+    if (stepNumber === 3) return true;
+    return false;
+  };
+
   const goToStep = (nextStep: number) => {
     if (nextStep < 1 || nextStep > 4 || (!selected.length && nextStep > 1))
       return;
+    if (nextStep === step + 1 && isStepComplete(step)) {
+      setCompletedSteps((current) =>
+        current.includes(step) ? current : [...current, step],
+      );
+    }
     setStep(nextStep);
   };
+
+  const displayedCompleteSteps = completedSteps.filter(isStepComplete);
 
   return (
     <div className="app-shell">
@@ -112,6 +127,7 @@ export default function QuotationApp() {
       <main className="main-grid">
         <QuotationStepRail
           step={step}
+          completedSteps={displayedCompleteSteps}
           selectedCount={selected.length}
           onGoToStep={goToStep}
         />

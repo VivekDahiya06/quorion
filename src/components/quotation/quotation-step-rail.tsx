@@ -3,10 +3,12 @@ import { SectionEyebrow } from "./section-eyebrow";
 
 export function QuotationStepRail({
   step,
+  completedSteps,
   selectedCount,
   onGoToStep,
 }: {
   step: number;
+  completedSteps: number[];
   selectedCount: number;
   onGoToStep: (nextStep: number) => void;
 }) {
@@ -17,17 +19,18 @@ export function QuotationStepRail({
         {STEPS.map((item, index) => {
           const stepNumber = index + 1;
           const reachable = selectedCount > 0 || stepNumber === 1;
+          const isComplete = completedSteps.includes(stepNumber);
           return (
             <li key={item.title}>
               <button
-                className={`step-link${step === stepNumber ? " is-active" : ""}${step > stepNumber ? " is-complete" : ""}`}
+                className={`step-link${step === stepNumber ? " is-active" : ""}${isComplete ? " is-complete" : ""}`}
                 type="button"
                 onClick={() => onGoToStep(stepNumber)}
                 disabled={!reachable}
                 aria-current={step === stepNumber ? "step" : undefined}
               >
                 <span className="step-number num">
-                  {step > stepNumber ? "✓" : `0${stepNumber}`}
+                  {isComplete ? "✓" : `0${stepNumber}`}
                 </span>
                 <span className="step-copy">
                   <strong>{item.title}</strong>
