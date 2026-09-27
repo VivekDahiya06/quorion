@@ -1,0 +1,14 @@
+src/types/quote-calculation.types.ts
+  h_1dd7bb9db9f819 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a129abbea03fcd30f6a9a7502a5f76bc5a29d275",
+  "prompts": {},
+  "humans": {
+    "h_1dd7bb9db9f819": {
+      "author": "Vivek Dahiya <vivekdahiya312@gmail.com>"
+    }
+  }
+}
