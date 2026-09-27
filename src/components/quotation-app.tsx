@@ -13,7 +13,7 @@ import { StepAddOns } from "./quotation/steps/step-addons";
 import { StepConfiguration } from "./quotation/steps/step-configuration";
 import { StepReview } from "./quotation/steps/step-review";
 import { StepServices } from "./quotation/steps/step-services";
-import { useQuotationIdentity } from "./quotation/use-quotation-identity";
+import { useQuotationIdentity } from "@/hooks/use-quotation-identity";
 import { WorkflowFooter } from "./quotation/workflow-footer";
 
 const EMPTY_CLIENT: ClientDetails = {
