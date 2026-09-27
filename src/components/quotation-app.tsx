@@ -1,20 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { SERVICES } from "@/constants/quotation-catalog.constants";
-import { getServiceDefaults } from "@/lib/quotation-catalog";
-import { type ClientDetails, downloadQuotationPdf } from "@/lib/quotation-pdf";
 import { calculateQuote } from "@/lib/quote-calculation";
-import type { QuoteConfig } from "@/types/quote-calculation.types";
-import { QuotationLedger } from "./quotation/quotation-ledger";
-import { QuotationStepRail } from "./quotation/quotation-step-rail";
-import { QuotationTopbar } from "./quotation/quotation-topbar";
 import { StepAddOns } from "./quotation/steps/step-addons";
-import { StepConfiguration } from "./quotation/steps/step-configuration";
 import { StepReview } from "./quotation/steps/step-review";
-import { StepServices } from "./quotation/steps/step-services";
-import { useQuotationIdentity } from "@/hooks/use-quotation-identity";
 import { WorkflowFooter } from "./quotation/workflow-footer";
+import { getServiceDefaults } from "@/lib/quotation-catalog";
+import { StepServices } from "./quotation/steps/step-services";
+import { QuotationTopbar } from "./quotation/quotation-topbar";
+import { QuotationLedger } from "./quotation/quotation-ledger";
+import { SERVICES } from "@/constants/quotation-catalog.constants";
+import type { QuoteConfig } from "@/types/quote-calculation.types";
+import { QuotationStepRail } from "./quotation/quotation-step-rail";
+import { useQuotationIdentity } from "@/hooks/use-quotation-identity";
+import { StepConfiguration } from "./quotation/steps/step-configuration";
+import { type ClientDetails, downloadQuotationPdf } from "@/lib/quotation-pdf";
 
 const EMPTY_CLIENT: ClientDetails = {
   name: "",
