@@ -1,0 +1,16 @@
+src/components/quotation-app.tsx
+  h_1dd7bb9db9f819 30,102-108,112-116,120-121,130
+src/components/quotation/quotation-step-rail.tsx
+  h_1dd7bb9db9f819 6,11,22,26,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "10cda63d964135155b30404d6138ab97b31d8142",
+  "prompts": {},
+  "humans": {
+    "h_1dd7bb9db9f819": {
+      "author": "Vivek Dahiya <vivekdahiya312@gmail.com>"
+    }
+  }
+}
