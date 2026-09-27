@@ -164,19 +164,23 @@ export async function downloadQuotationPdf(
         8,
         descriptionLines.length * 4 + detailLines.length * 3.5 + 2,
       );
-      ensureSpace(rowHeight);
+      const rowTopPadding = 3;
+      ensureSpace(rowHeight + rowTopPadding);
+      const rowTextY = y + rowTopPadding;
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(QUOTATION_PDF_FONT_SIZES.LINE_DESCRIPTION);
       pdf.setTextColor(...QUOTATION_PDF_COLORS.LINE_DESCRIPTION_TEXT);
-      pdf.text(descriptionLines, left + 4, y);
+      pdf.text(descriptionLines, left + 4, rowTextY);
       pdf.setFontSize(QUOTATION_PDF_FONT_SIZES.LINE_DETAIL);
       pdf.setTextColor(...QUOTATION_PDF_COLORS.LINE_DETAIL_TEXT);
-      pdf.text(detailLines, left + 4, y + descriptionLines.length * 4);
+      pdf.text(detailLines, left + 4, rowTextY + descriptionLines.length * 4);
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(QUOTATION_PDF_FONT_SIZES.LINE_DESCRIPTION);
       pdf.setTextColor(...QUOTATION_PDF_COLORS.LINE_DESCRIPTION_TEXT);
-      pdf.text(formatPdfMoney(line.amount), right - 3, y, { align: "right" });
-      y += rowHeight;
+      pdf.text(formatPdfMoney(line.amount), right - 3, rowTextY, {
+        align: "right",
+      });
+      y += rowHeight + rowTopPadding;
       pdf.setDrawColor(...QUOTATION_PDF_COLORS.ROW_DIVIDER);
       pdf.line(left, y - 2, right, y - 2);
     }
