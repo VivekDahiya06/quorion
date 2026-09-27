@@ -1,0 +1,15 @@
+src/lib/quotation-pdf.ts
+  h_1dd7bb9db9f819 167-169,173,176,180-181,183
+  h_1dd7bb9db9f819 182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3992fd5993e49c1751d6fc53efd524fa9417f05c",
+  "prompts": {},
+  "humans": {
+    "h_1dd7bb9db9f819": {
+      "author": "Vivek Dahiya <vivekdahiya312@gmail.com>"
+    }
+  }
+}
