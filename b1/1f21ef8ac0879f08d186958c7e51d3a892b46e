@@ -1,0 +1,16 @@
+src/components/quotation-app.tsx
+  h_1dd7bb9db9f819 16
+src/hooks/use-quotation-identity.ts
+  h_1dd7bb9db9f819 2-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b11f21ef8ac0879f08d186958c7e51d3a892b46e",
+  "prompts": {},
+  "humans": {
+    "h_1dd7bb9db9f819": {
+      "author": "Vivek Dahiya <vivekdahiya312@gmail.com>"
+    }
+  }
+}
