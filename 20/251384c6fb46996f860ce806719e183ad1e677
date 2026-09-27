@@ -1,0 +1,14 @@
+src/components/quotation-app.tsx
+  h_1dd7bb9db9f819 7-8,10-14,16-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "20251384c6fb46996f860ce806719e183ad1e677",
+  "prompts": {},
+  "humans": {
+    "h_1dd7bb9db9f819": {
+      "author": "Vivek Dahiya <vivekdahiya312@gmail.com>"
+    }
+  }
+}
