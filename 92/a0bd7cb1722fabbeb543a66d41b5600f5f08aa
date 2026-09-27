@@ -1,0 +1,14 @@
+src/components/ui/button.tsx
+  h_1dd7bb9db9f819 5,40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "92a0bd7cb1722fabbeb543a66d41b5600f5f08aa",
+  "prompts": {},
+  "humans": {
+    "h_1dd7bb9db9f819": {
+      "author": "Vivek Dahiya <vivekdahiya312@gmail.com>"
+    }
+  }
+}
