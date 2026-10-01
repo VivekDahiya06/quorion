@@ -1,5 +1,4 @@
 import { SERVICES } from "@/constants/quotation-catalog.constants";
-import { formatINR } from "@/lib/quote-calculation";
 import { StepHeading } from "../step-heading";
 
 function serviceSymbol(name: string) {
@@ -21,7 +20,7 @@ export function StepServices({
       <StepHeading
         eyebrow="01 / Services"
         title="What are we making?"
-        description="Choose the services that bring your next idea to life. You can mix and match as much as you need."
+        description="Choose the services that bring your next idea to life. You can mix and match as much as you need, and pricing comes together as you configure each one."
       />
       <div className="service-grid">
         {SERVICES.map((service) => {
@@ -47,10 +46,6 @@ export function StepServices({
               </span>
               <strong>{service.name}</strong>
               <span className="service-tagline">{service.tagline}</span>
-              <span className="service-price">
-                <small>FROM</small>
-                <b className="num">{formatINR(service.basePrice)}</b>
-              </span>
               {isSelected && (
                 <span className="added-label">
                   <span className="status-dot" /> Added to quotation

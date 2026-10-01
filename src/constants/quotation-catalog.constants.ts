@@ -1,13 +1,10 @@
 import type { AddOn, Service } from "@/types/quote-catalog.types";
 
-export const BASE_ENGAGEMENT_NAME = "Discovery, project management and QA";
-
 export const SERVICES: Service[] = [
     {
         id: "web",
         name: "Web Development",
         tagline: "Pages, admin panel, backend, API & database migration.",
-        basePrice: 45_000,
         options: [
             {
                 id: "pages",
@@ -15,9 +12,8 @@ export const SERVICES: Service[] = [
                 note: "Custom-designed pages, up to 8 blocks each.",
                 kind: "counter",
                 unitPrice: 22_000,
-                min: 1,
+                min: 0,
                 max: 40,
-                defaultQuantity: 5,
             },
             {
                 id: "admin",
@@ -25,7 +21,6 @@ export const SERVICES: Service[] = [
                 note: "Content management with role-based access.",
                 kind: "toggle",
                 price: 45_000,
-                defaultOn: true,
             },
             {
                 id: "backend",
@@ -49,7 +44,6 @@ export const SERVICES: Service[] = [
                 unitPrice: 18_000,
                 min: 0,
                 max: 10,
-                defaultQuantity: 0,
             },
             {
                 id: "payment",
@@ -71,7 +65,6 @@ export const SERVICES: Service[] = [
         id: "uiux",
         name: "UI / UX Design",
         tagline: "Wireframes, hi-fi screens, prototypes and design systems.",
-        basePrice: 30_000,
         options: [
             {
                 id: "screens",
@@ -79,9 +72,8 @@ export const SERVICES: Service[] = [
                 note: "Desktop and mobile states per screen.",
                 kind: "counter",
                 unitPrice: 6_000,
-                min: 1,
+                min: 0,
                 max: 60,
-                defaultQuantity: 8,
             },
             {
                 id: "design-system",
@@ -89,7 +81,6 @@ export const SERVICES: Service[] = [
                 note: "Tokens, components and usage documentation.",
                 kind: "toggle",
                 price: 28_000,
-                defaultOn: true,
             },
             {
                 id: "prototype",
@@ -111,7 +102,6 @@ export const SERVICES: Service[] = [
         id: "graphic",
         name: "Graphic Design",
         tagline: "Logo, brand kit, social templates and print collateral.",
-        basePrice: 18_000,
         options: [
             {
                 id: "logo",
@@ -119,7 +109,6 @@ export const SERVICES: Service[] = [
                 note: "Primary, secondary and favicon lockups.",
                 kind: "toggle",
                 price: 15_000,
-                defaultOn: true,
             },
             {
                 id: "guidelines",
@@ -136,7 +125,6 @@ export const SERVICES: Service[] = [
                 unitPrice: 2_500,
                 min: 0,
                 max: 50,
-                defaultQuantity: 6,
             },
             {
                 id: "print",
@@ -151,7 +139,6 @@ export const SERVICES: Service[] = [
         id: "video",
         name: "Video Editing",
         tagline: "Reels, cutdowns, motion graphics and sound design.",
-        basePrice: 15_000,
         options: [
             {
                 id: "videos",
@@ -159,9 +146,8 @@ export const SERVICES: Service[] = [
                 note: "Up to 90 seconds each, two revision rounds.",
                 kind: "counter",
                 unitPrice: 12_000,
-                min: 1,
+                min: 0,
                 max: 40,
-                defaultQuantity: 3,
             },
             {
                 id: "motion",
@@ -169,7 +155,6 @@ export const SERVICES: Service[] = [
                 note: "Animated titles, lower thirds and transitions.",
                 kind: "toggle",
                 price: 20_000,
-                defaultOn: true,
             },
             {
                 id: "sound",

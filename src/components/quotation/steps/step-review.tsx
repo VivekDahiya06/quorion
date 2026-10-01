@@ -23,7 +23,6 @@ export function StepReview({
   client,
   reference,
   quoteDate,
-  hasSelection,
   isDownloading,
   downloadError,
   onDownload,
@@ -32,7 +31,6 @@ export function StepReview({
   client: ClientDetails;
   reference: string;
   quoteDate: Date | null;
-  hasSelection: boolean;
   isDownloading: boolean;
   downloadError: string;
   onDownload: () => void;
@@ -68,6 +66,11 @@ export function StepReview({
         </div>
       </div>
       <div className="review-groups">
+        {quote.groups.length === 0 && (
+          <p className="empty-note">
+            No features added yet. Go back to Configuration to build your scope.
+          </p>
+        )}
         {quote.groups.map((group) => (
           <section className="review-group" key={group.id}>
             <div className="review-group-heading">
@@ -125,7 +128,7 @@ export function StepReview({
         type="button"
         className="button button-primary download-review"
         onClick={onDownload}
-        disabled={!hasSelection || isDownloading}
+        disabled={quote.groups.length === 0 || isDownloading}
       >
         <span aria-hidden="true">↓</span>
         {isDownloading ? "Preparing your PDF…" : "Download quotation PDF"}

@@ -1,20 +1,19 @@
 import { APP_CONSTANTS } from "@/constants/app.constants";
 import type { ServiceOption } from "@/types/quote-catalog.types";
-import { ADD_ONS, BASE_ENGAGEMENT_NAME, SERVICES } from "@/constants/quotation-catalog.constants";
+import { ADD_ONS, SERVICES } from "@/constants/quotation-catalog.constants";
 import type { QuoteConfig, QuoteGroup, QuoteLine, QuoteTotals } from "@/types/quote-calculation.types";
 
-function readOptionValue(
+// Unset options start empty: toggles off, counters at their minimum.
+export function readOptionValue(
   value: number | boolean | undefined,
   option: ServiceOption,
 ) {
   if (option.kind === "toggle") {
-    return typeof value === "boolean" ? value : (option.defaultOn ?? false);
+    return value === true;
   }
 
   const quantity =
-    typeof value === "number" && Number.isFinite(value)
-      ? value
-      : (option.defaultQuantity ?? 1);
+    typeof value === "number" && Number.isFinite(value) ? value : option.min;
   return Math.min(option.max, Math.max(option.min, Math.trunc(quantity)));
 }
 
@@ -29,13 +28,7 @@ export function calculateQuote(
     const service = SERVICES.find((item) => item.id === serviceId);
     if (!service) continue;
 
-    const lines: QuoteLine[] = [
-      {
-        description: BASE_ENGAGEMENT_NAME,
-        detail: "One-time",
-        amount: service.basePrice,
-      },
-    ];
+    const lines: QuoteLine[] = [];
     const values = config[service.id] ?? {};
 
     for (const option of service.options) {
@@ -54,6 +47,9 @@ export function calculateQuote(
         });
       }
     }
+
+    // A selected service only appears in the quote once a feature is added.
+    if (lines.length === 0) continue;
 
     groups.push({
       id: service.id,

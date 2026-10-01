@@ -1,6 +1,10 @@
 import { SERVICES } from "@/constants/quotation-catalog.constants";
 import { getServiceDefaults } from "@/lib/quotation-catalog";
-import { calculateQuote, formatINR } from "@/lib/quote-calculation";
+import {
+  calculateQuote,
+  formatINR,
+  readOptionValue,
+} from "@/lib/quote-calculation";
 import type { QuoteConfig } from "@/types/quote-calculation.types";
 import type { Service } from "@/types/quote-catalog.types";
 import { SectionEyebrow } from "../section-eyebrow";
@@ -38,28 +42,15 @@ function ServiceConfiguration({
           <strong className="num">{formatINR(serviceTotal)}</strong>
         </div>
       </div>
-      <div className="base-line">
-        <span>
-          <strong>Discovery, project management and QA</strong>
-          <small>
-            Core engagement · project planning, coordination and quality review
-          </small>
-        </span>
-        <b className="num">{formatINR(service.basePrice)}</b>
-      </div>
       <div className="option-list">
         {service.options.map((option) => {
-          const value = values[option.id];
-          const enabled =
-            option.kind === "toggle"
-              ? Boolean(value)
-              : Number(value ?? option.defaultQuantity ?? 1) > 0;
+          const value = readOptionValue(values[option.id], option);
           const amount =
             option.kind === "toggle"
               ? value === true
                 ? option.price
                 : 0
-              : Number(value ?? option.defaultQuantity ?? 1) * option.unitPrice;
+              : Number(value) * option.unitPrice;
           return (
             <div className="option-row" key={option.id}>
               <div className="option-description">
@@ -80,20 +71,15 @@ function ServiceConfiguration({
                       onChangeOption(
                         service.id,
                         option.id,
-                        Math.max(
-                          option.min,
-                          Number(value ?? option.defaultQuantity ?? 1) - 1,
-                        ),
+                        Math.max(option.min, Number(value) - 1),
                       )
                     }
-                    disabled={
-                      Number(value ?? option.defaultQuantity ?? 1) <= option.min
-                    }
+                    disabled={Number(value) <= option.min}
                   >
                     −
                   </button>
                   <span className="counter-value num" aria-live="polite">
-                    {Number(value ?? option.defaultQuantity ?? 1)}
+                    {Number(value)}
                   </span>
                   <button
                     type="button"
@@ -102,15 +88,10 @@ function ServiceConfiguration({
                       onChangeOption(
                         service.id,
                         option.id,
-                        Math.min(
-                          option.max,
-                          Number(value ?? option.defaultQuantity ?? 1) + 1,
-                        ),
+                        Math.min(option.max, Number(value) + 1),
                       )
                     }
-                    disabled={
-                      Number(value ?? option.defaultQuantity ?? 1) >= option.max
-                    }
+                    disabled={Number(value) >= option.max}
                   >
                     +
                   </button>
@@ -118,7 +99,7 @@ function ServiceConfiguration({
               ) : (
                 <button
                   type="button"
-                  className={`switch${enabled ? " on" : ""}`}
+                  className={`switch${value === true ? " on" : ""}`}
                   role="switch"
                   aria-checked={value === true}
                   aria-label={option.name}
@@ -142,12 +123,14 @@ export function StepConfiguration({
   selected,
   config,
   activeService,
+  unconfiguredServices,
   onSelectService,
   onChangeOption,
 }: {
   selected: string[];
   config: QuoteConfig;
   activeService: string | null;
+  unconfiguredServices: string[];
   onSelectService: (serviceId: string) => void;
   onChangeOption: (
     serviceId: string,
@@ -158,6 +141,9 @@ export function StepConfiguration({
   const service =
     SERVICES.find((item) => item.id === activeService) ??
     SERVICES.find((item) => selected.includes(item.id));
+  const pendingNames = SERVICES.filter((item) =>
+    unconfiguredServices.includes(item.id),
+  ).map((item) => item.name);
 
   return (
     <>
@@ -171,18 +157,30 @@ export function StepConfiguration({
         role="group"
         aria-label="Services to configure"
       >
-        {SERVICES.filter((item) => selected.includes(item.id)).map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            aria-pressed={activeService === item.id}
-            className={activeService === item.id ? "active" : ""}
-            onClick={() => onSelectService(item.id)}
-          >
-            {item.name}
-          </button>
-        ))}
+        {SERVICES.filter((item) => selected.includes(item.id)).map((item) => {
+          const needsSetup = unconfiguredServices.includes(item.id);
+          return (
+            <button
+              key={item.id}
+              type="button"
+              aria-pressed={activeService === item.id}
+              className={`${activeService === item.id ? "active" : ""}${needsSetup ? " needs-setup" : ""}`}
+              onClick={() => onSelectService(item.id)}
+            >
+              {item.name}
+              {needsSetup && (
+                <span className="sr-only"> (needs at least one feature)</span>
+              )}
+            </button>
+          );
+        })}
       </div>
+      {pendingNames.length > 0 && (
+        <p className="setup-hint" role="status">
+          <span className="status-dot" aria-hidden="true" /> Add at least one
+          feature to {pendingNames.join(", ")} to continue.
+        </p>
+      )}
       {service ? (
         <ServiceConfiguration
           service={service}

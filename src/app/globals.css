@@ -35,6 +35,7 @@
   --color-glow: var(--glow);
   --color-glow2: var(--glow2);
   --color-good: var(--good);
+  --color-warn: var(--warn);
   --font-display: "Fraunces", Georgia, serif;
   --font-sans: "Space Grotesk", Arial, sans-serif;
   --font-mono: "JetBrains Mono", Consolas, monospace;
@@ -49,6 +50,7 @@
   --glow: oklch(0.7199 0.1495 252.55);
   --glow2: oklch(0.6829 0.1683 276.13);
   --good: oklch(0.7752 0.1471 165.96);
+  --warn: oklch(0.8 0.14 75);
   --background: var(--ink);
   --foreground: oklch(1 0 0);
   --card: var(--panel);
@@ -163,11 +165,10 @@ h3 {
 .brand-copy,
 .client-pill,
 .service-card-top,
-.service-price,
 .selection-hint,
+.setup-hint,
 .scope-summary,
 .scope-total,
-.base-line,
 .option-row,
 .option-control,
 .addon-card,
@@ -467,23 +468,6 @@ h3 {
   font-size: 11px;
   line-height: 1.5;
 }
-.service-price {
-  width: 100%;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: auto;
-  padding-top: 13px;
-}
-.service-price small {
-  color: var(--mist);
-  font-size: 9px;
-  letter-spacing: 0.1em;
-}
-.service-price b {
-  color: var(--foreground);
-  font-size: 12px;
-  font-weight: 500;
-}
 .added-label {
   display: flex;
   align-items: center;
@@ -515,6 +499,26 @@ h3 {
   font-size: 11px;
   cursor: pointer;
 }
+.service-tabs button.needs-setup::after {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--warn);
+  vertical-align: middle;
+}
+.setup-hint {
+  gap: 8px;
+  margin: -6px 0 16px;
+  color: var(--mist);
+  font-size: 11px;
+}
+.setup-hint .status-dot {
+  background: var(--warn);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--warn) 55%, transparent);
+}
 .service-tabs button.active {
   border-color: color-mix(in oklab, var(--glow) 55%, transparent);
   background: color-mix(in oklab, var(--glow) 12%, transparent);
@@ -544,37 +548,20 @@ h3 {
   font-size: 14px;
   font-weight: 500;
 }
-.base-line {
-  justify-content: space-between;
-  gap: 12px;
-  padding: 13px 14px;
-  border: 1px solid color-mix(in oklab, var(--glow) 20%, transparent);
-  border-radius: 11px;
-  background: color-mix(in oklab, var(--glow) 7%, transparent);
-}
-.base-line > span,
 .option-description {
   display: grid;
   min-width: 0;
   gap: 4px;
 }
-.base-line strong,
 .option-description strong {
   color: var(--foreground);
   font-size: 11px;
   font-weight: 500;
 }
-.base-line small,
 .option-description small {
   color: var(--mist);
   font-size: 10px;
   line-height: 1.45;
-}
-.base-line > b {
-  flex: 0 0 auto;
-  color: var(--foreground);
-  font-size: 11px;
-  font-weight: 500;
 }
 .option-list {
   margin-top: 9px;

@@ -6,7 +6,6 @@ export type CounterOption = {
     unitPrice: number;
     min: number;
     max: number;
-    defaultQuantity?: number;
 };
 
 export type ToggleOption = {
@@ -15,7 +14,6 @@ export type ToggleOption = {
     note: string;
     kind: "toggle";
     price: number;
-    defaultOn?: boolean;
 };
 
 export type ServiceOption = CounterOption | ToggleOption;
@@ -24,7 +22,6 @@ export type Service = {
     id: string;
     name: string;
     tagline: string;
-    basePrice: number;
     options: ServiceOption[];
 };
 

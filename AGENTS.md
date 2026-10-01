@@ -36,8 +36,8 @@ This is the main guide to the project for any AI coding agent. `CLAUDE.md` impor
 
 A **client-side quotation calculator for a creative services studio**. The user goes through four steps:
 
-1. **Services**: pick one or more of Web Development, UI/UX Design, Graphic Design, Video Editing.
-2. **Configuration**: adjust quantities (counters) and extras (toggles) per service.
+1. **Services**: pick one or more of Web Development, UI/UX Design, Graphic Design, Video Editing. **No prices are shown or charged here.** Selecting a service only adds it to the scope.
+2. **Configuration**: this is where pricing happens. Every feature starts empty (counters at 0, toggles off), and the price builds up only from the features the user adds. There is no base fee per service.
 3. **Add-ons & billing**: optional recommended extras, plus optional client details.
 4. **Review**: full quotation with an INR total including 18% GST (9% CGST + 9% SGST), and a PDF download.
 
@@ -45,7 +45,9 @@ A live **ledger** panel shows the running estimate on every step.
 
 Out of scope: backend, database, persistence, auth, payments, email, IGST, form validation. All state lives in React and resets on reload. The studio identity (name, GSTIN, email) is display-only.
 
-`project.md` is the original product/design spec (exact copy, prices, colors, acceptance criteria). Its "Recommended stack" section (TanStack Start/Vite) is **outdated**: the app is built on Next.js. The code and this file take precedence.
+`project.md` is the original product/design spec (exact copy, prices, colors, acceptance criteria). Where the spec and the code differ, the code and this file take precedence. Known differences:
+- The spec's "Recommended stack" section (TanStack Start/Vite) is outdated; the app is built on Next.js.
+- The spec's service **base prices** (and the "Discovery, project management and QA" line) and **pre-set option defaults** have been removed on purpose.
 
 ---
 
@@ -98,24 +100,24 @@ quorion/
    │  ├─ quotation-app.tsx      "use client" — the ONLY stateful component; owns all state and handlers
    │  ├─ quotation/             presentational components (props in, callbacks out, no state)
    │  │  ├─ quotation-topbar.tsx       brand lockup, client pill (company || name || "New quotation"), last 4 chars of reference
-   │  │  ├─ quotation-step-rail.tsx    left nav of STEPS; ✓ for completed, disabled until a service is selected
+   │  │  ├─ quotation-step-rail.tsx    left nav of STEPS; ✓ for done steps; a step is disabled unless it is ≤ maxReachableStep (or is the current step)
    │  │  ├─ quotation-ledger.tsx       right "Your ledger": groups, subtotal/CGST/SGST/grand total, Download PDF
-   │  │  ├─ workflow-footer.tsx        Back / Continue ("Review quotation" on step 3), "0N / 04" counter
+   │  │  ├─ workflow-footer.tsx        Back / Continue ("Review quotation" on step 3; disabled unless `canContinue`), "0N / 04" counter
    │  │  ├─ step-heading.tsx           eyebrow + h1 + description used at the top of each step
    │  │  ├─ section-eyebrow.tsx        <p className="eyebrow">
    │  │  └─ steps/
-   │  │     ├─ step-services.tsx       step 1: service cards (toggle select); icon via serviceSymbol(name)
-   │  │     ├─ step-configuration.tsx  step 2: service tabs + ServiceConfiguration (counters/switches, per-service subtotal)
+   │  │     ├─ step-services.tsx       step 1: service cards (toggle select, no prices); icon via serviceSymbol(name)
+   │  │     ├─ step-configuration.tsx  step 2: service tabs (amber dot on unconfigured ones) + "Add at least one feature to …" hint + ServiceConfiguration (counters/switches, per-service subtotal); reads values via readOptionValue
    │  │     ├─ step-addons.tsx         step 3: visible add-ons + CLIENT_FIELDS billing form
    │  │     └─ step-review.tsx         step 4: reference/date, prepared-for, line items, totals, terms, download
    │  └─ ui/button.tsx          shadcn Button + buttonVariants (currently unused)
    ├─ constants/                UPPER_SNAKE exports, no logic
    │  ├─ app.constants.ts       APP_CONSTANTS {LOCALE "en-IN", CURRENCY "INR"}, STEPS [{title, note}] ×4
-   │  ├─ quotation-catalog.constants.ts  BASE_ENGAGEMENT_NAME, SERVICES, ADD_ONS, STUDIO, QUOTATION_TERMS
+   │  ├─ quotation-catalog.constants.ts  SERVICES, ADD_ONS, STUDIO, QUOTATION_TERMS
    │  └─ quotation-pdf.constants.ts      QUOTATION_PDF_LAYOUT (mm), _COLORS (RGB tuples), _FONT_SIZES, _DATE_LOCALE
    ├─ lib/                      pure functions (plus the PDF side effect)
-   │  ├─ quote-calculation.ts   calculateQuote(), formatINR(), createQuotationReference()
-   │  ├─ quotation-catalog.ts   getServiceDefaults(service)
+   │  ├─ quote-calculation.ts   calculateQuote(), readOptionValue(), formatINR(), createQuotationReference()
+   │  ├─ quotation-catalog.ts   getServiceDefaults(service): all toggles false, counters at min (via readOptionValue)
    │  ├─ quotation-pdf.ts       downloadQuotationPdf(); also exports the ClientDetails type
    │  └─ utils.ts               cn(), re-exported from the `cn` npm package
    ├─ hooks/
@@ -134,7 +136,7 @@ quorion/
 | State | Type | Purpose |
 |---|---|---|
 | `step` | `number` 1–4 | current step |
-| `completedSteps` | `number[]` | steps marked ✓ (filtered by `isStepComplete` before display) |
+| `completedSteps` | `number[]` | raw record of steps the user has passed with Continue (see derived `doneSteps`) |
 | `selected` | `string[]` | selected service ids, in click order |
 | `config` | `QuoteConfig` = `Record<serviceId, Record<optionId, number \| boolean>>` | option values per service |
 | `activeService` | `string \| null` | which service tab is open in step 2 |
@@ -142,6 +144,12 @@ quorion/
 | `client` | `ClientDetails` {name, company, email, phone, gstin, state} | billing details, all optional strings |
 | `isDownloading`, `downloadError` | `boolean`, `string` | PDF download UI state |
 | `reference`, `quoteDate` | from `useQuotationIdentity()` | `""` / `null` during SSR, set once in the browser |
+
+Derived values (recomputed every render, not state):
+- `quote`: the result of `calculateQuote`.
+- `unconfiguredServices`: selected service ids with no group in `quote`, i.e. no feature added yet.
+- `doneSteps`: the unbroken chain from step 1 of steps that are in `completedSteps` **and** still pass `isStepComplete`.
+- `maxReachableStep = min(4, doneSteps.length + 1)`.
 
 Handlers: `toggleService`, `changeOption`, `toggleAddOn`, `changeClient`, `downloadPdf`, `goToStep`, `isStepComplete`. Child components receive data plus these callbacks as props. They never hold state.
 
@@ -154,7 +162,7 @@ selected + config + chosenAddOns ┴─► calculateQuote() ─► QuoteTotals �
                                                                       └─► downloadQuotationPdf()
 ```
 
-- **`calculateQuote(selected, config, chosenAddOns): QuoteTotals`** is the single pricing engine. It runs on every render (the React Compiler handles memoization, so don't add `useMemo`). For each selected service it outputs a group made of a base line (`BASE_ENGAGEMENT_NAME`, `basePrice`), one line per counter with value > 0 (`qty × unitPrice`), and one line per toggle that is on. Chosen add-ons go into one extra group, `id: "additional-services"`. Then: `subtotal`, `gst = subtotal × 0.18`, `cgst = sgst = gst / 2`, `grandTotal`. Counter values are clamped to `[min, max]` and truncated. Missing values fall back to `defaultQuantity ?? 1` / `defaultOn ?? false`.
+- **`calculateQuote(selected, config, chosenAddOns): QuoteTotals`** is the single pricing engine. It runs on every render (the React Compiler handles memoization, so don't add `useMemo`). For each selected service it outputs a group with one line per counter with value > 0 (`qty × unitPrice`, detail `"N × ₹X"`) and one line per toggle that is on (detail `"One-time"`). **There is no base line, and a selected service with no features added produces no group at all.** So `quote.groups.length === 0` means "nothing priced yet", even when services are selected. Chosen add-ons go into one extra group, `id: "additional-services"`. Then: `subtotal`, `gst = subtotal × 0.18`, `cgst = sgst = gst / 2`, `grandTotal`. - **`readOptionValue(value, option)`** turns a raw config value into its effective value. Toggles: `value === true`. Counters: truncated and clamped to `[min, max]`; a missing value becomes `min` (0 for every current counter). `calculateQuote`, `getServiceDefaults` and the step 2 UI all use it, so displayed values and priced values always agree.
 - `step-configuration.tsx` also calls `calculateQuote([serviceId], …, [])` to show a per-service subtotal.
 - **Never compute prices anywhere else.** UI, ledger and PDF must all read `QuoteTotals`.
 - `formatINR(n)` → `₹1,23,456` (en-IN, 0 decimals). The PDF uses its own `formatPdfMoney` → `Rs. 1,23,456`, because jsPDF's helvetica font has no ₹ glyph. Line `detail` strings have `₹` replaced with `Rs. ` before drawing.
@@ -170,17 +178,20 @@ The page is server-rendered, and then `QuotationApp` hydrates as a client compon
 
 Everything lives in `src/constants/quotation-catalog.constants.ts`. Prices are INR, written with `_` separators (e.g. `45_000`).
 
-- `Service = { id, name, tagline, basePrice, options: ServiceOption[] }`
-- `CounterOption = { kind: "counter", id, name, note, unitPrice, min, max, defaultQuantity? }`
-- `ToggleOption = { kind: "toggle", id, name, note, price, defaultOn? }`
+- `Service = { id, name, tagline, options: ServiceOption[] }`. **No base price.**
+- `CounterOption = { kind: "counter", id, name, note, unitPrice, min, max }`. Starts at `min`; every counter currently has `min: 0`.
+- `ToggleOption = { kind: "toggle", id, name, note, price }`. Always starts off.
+- There are no pre-set defaults (`defaultQuantity`/`defaultOn` were removed). Every service starts at ₹0.
 - `AddOn = { id, name, note, price, suffix?, triggers: serviceId[] }`. `suffix` replaces "One-time" as the line detail.
 
-| Service id | Name | Base | Options (id: kind) |
-|---|---|---|---|
-| `web` | Web Development | 45,000 | pages: counter 22k (1–40, def 5) · admin: toggle 45k (on) · backend 90k · api-migration 30k · database-migration: counter 18k (0–10, def 0) · payment 25k · seo 15k |
-| `uiux` | UI / UX Design | 30,000 | screens: counter 6k (1–60, def 8) · design-system 28k (on) · prototype 18k · research 22k |
-| `graphic` | Graphic Design | 18,000 | logo 15k (on) · guidelines 25k · templates: counter 2.5k (0–50, def 6) · print 12k |
-| `video` | Video Editing | 15,000 | videos: counter 12k (1–40, def 3) · motion 20k (on) · sound 8k · subtitles 4k |
+| Service id | Name | Options (id: kind, price) |
+|---|---|---|
+| `web` | Web Development | pages: counter 22k each (0–40) · admin: toggle 45k · backend 90k · api-migration 30k · database-migration: counter 18k each (0–10) · payment 25k · seo 15k |
+| `uiux` | UI / UX Design | screens: counter 6k each (0–60) · design-system 28k · prototype 18k · research 22k |
+| `graphic` | Graphic Design | logo 15k · guidelines 25k · templates: counter 2.5k each (0–50) · print 12k |
+| `video` | Video Editing | videos: counter 12k each (0–40) · motion 20k · sound 8k · subtitles 4k |
+
+Unlabeled options are toggles.
 
 | Add-on id | Price | Triggered by |
 |---|---|---|
@@ -196,12 +207,24 @@ Everything lives in `src/constants/quotation-catalog.constants.ts`. Prices are I
 
 ## Workflow rules
 
-- `goToStep(n)` rejects `n < 1`, `n > 4`, and any `n > 1` when nothing is selected. Moving forward exactly one step (`n === step + 1`) while the current step is complete adds the current step to `completedSteps`.
-- `isStepComplete`: steps 1 and 2 are complete when `selected.length > 0`, step 3 is always complete, step 4 never is.
-- Step rail: step 1 is always reachable; steps 2–4 need at least one selected service. The footer's Continue button is disabled on step 4, and on step 1 when nothing is selected.
-- **Selecting a service** appends it to `selected`, seeds `config[serviceId]` with `getServiceDefaults()` only if it has no config yet, and makes it the active tab if none is active. **Deselecting** removes it from `selected` and keeps its config, so reselecting restores the user's values. If it was the active tab, the first remaining service becomes active.
+- **Strict, sequential gating.** A step is reachable only when every step before it is *done*. Done means the user moved past it with Continue (it is in `completedSteps`) **and** it still passes `isStepComplete`, with no gaps from step 1 (`doneSteps`).
+- `isStepComplete`:
+  - Step 1: `selected.length > 0`.
+  - Step 2: at least one service selected **and every selected service has at least one priced feature** (`unconfiguredServices.length === 0`).
+  - Step 3: always (add-ons and billing are optional).
+  - Step 4: never.
+- `goToStep(n)`:
+  - Ignores `n` that is out of range or equal to the current step.
+  - Moving forward one step (`n === step + 1`) needs the current step to be reachable and complete. It then records the current step in `completedSteps`.
+  - Any other jump (sidebar, or Back) is allowed only if `n <= maxReachableStep`.
+- **Edits re-lock later steps.** For example, going back to step 1 and selecting a new, unconfigured service makes step 2 incomplete, so steps 3–4 become disabled in the rail until that service gets a feature. Steps already in `completedSteps` become reachable again as soon as they're valid; the user does not have to click Continue through them again.
+- Step rail: a button is disabled unless `stepNumber <= maxReachableStep` or it is the current step. ✓ is shown for `doneSteps` only.
+- Footer: Continue is disabled on step 4 or when `!isStepComplete(step)` (`canContinue` prop). Back is disabled only on step 1.
+- Step 2 shows a `.setup-hint` (`role="status"`) naming every unconfigured service, and marks their tabs with `.needs-setup` (amber dot plus `sr-only` text).
+- **Selecting a service** appends it to `selected`, seeds `config[serviceId]` with `getServiceDefaults()` (all empty) only if it has no config yet, and makes it the active tab if none is active. **Deselecting** removes it from `selected` and keeps its config, so reselecting restores the user's values. If it was the active tab, the first remaining service becomes active.
 - Step 3 shows an add-on if any of its `triggers` is selected **or** it is already chosen. Chosen add-ons stay in the quote even after their trigger service is deselected.
-- Both download buttons (ledger and review) are disabled when nothing is selected or while a download is in progress. Errors appear in `<p className="error-message" role="alert">`.
+- Step 1 never affects the price: the ledger stays at ₹0 until features are added in step 2. The ledger's empty state says "Pick a service…" when nothing is selected and "Add features in Configuration…" when services are selected but have no features. Step 4 shows an empty note in the same situation.
+- Both download buttons (ledger and review) are disabled while `quote.groups.length === 0` (nothing priced) or while a download is in progress. `downloadPdf` has the same guard. Errors appear in `<p className="error-message" role="alert">`.
 - Client fields have no validation. Blank values are left out of the "Prepared for" text and the PDF. Display name = `company || name || "Client"`. The contact name is shown separately only when both company and name are set.
 
 ---
@@ -224,9 +247,9 @@ Pagination uses a moving `y` cursor. `ensureSpace(h)` adds a page and redraws th
 
 ## Styling
 
-- **Most styling is hand-written semantic CSS in `src/app/globals.css`**, not Tailwind utility classes. Components use plain `<button>`, `<input>`, `<article>` etc. with classes such as `glass`, `button button-primary|button-outline|button-quiet`, `eyebrow`, `num`, `status-dot`, `service-card selected`, `option-row`, `switch on`, `ledger-*`, `review-*`, `addon-card`, `field`, `form-grid`, `slide-in`, `tick`. State is expressed with modifier classes (`selected`, `is-active`, `is-complete`, `on`, `checked`), built with template strings. When editing existing UI, **follow this pattern**: add or extend classes in `globals.css` next to related rules.
+- **Most styling is hand-written semantic CSS in `src/app/globals.css`**, not Tailwind utility classes. Components use plain `<button>`, `<input>`, `<article>` etc. with classes such as `glass`, `button button-primary|button-outline|button-quiet`, `eyebrow`, `num`, `status-dot`, `service-card selected`, `option-row`, `switch on`, `ledger-*`, `review-*`, `addon-card`, `field`, `form-grid`, `slide-in`, `tick`. State is expressed with modifier classes (`selected`, `is-active`, `is-complete`, `on`, `checked`), built with template strings. When editing existing UI, **follow this pattern**: add or extend classes in `globals.css` next to related rules. Tailwind utilities do work (e.g. `sr-only` for screen-reader-only text) but are used sparingly.
 - Layout: `.app-shell` > `.topbar` + `.main-grid` (3 columns: `.step-rail` | `.workflow` | `.ledger`) + `.page-footer`. Breakpoints are in `globals.css`: **1150px** (narrower columns), **1023px** (stacked layout), **600px** (mobile). `prefers-reduced-motion` disables animations.
-- Theme: **one dark theme**. Tokens are on `:root` (oklch): `--ink` (background), `--panel`, `--mist` (body text), `--glow` (primary blue), `--glow2` (violet), `--good` (green), plus shadcn aliases (`--background`, `--primary`, `--border`, …), `--aurora` and `--gradient-total`. They are exposed to Tailwind via `@theme inline` (`bg-ink`, `text-mist`, `text-glow`, …). There is no `tailwind.config`.
+- Theme: **one dark theme**. Tokens are on `:root` (oklch): `--ink` (background), `--panel`, `--mist` (body text), `--glow` (primary blue), `--glow2` (violet), `--good` (green), `--warn` (amber, used for "needs attention" markers), plus shadcn aliases (`--background`, `--primary`, `--border`, …), `--aurora` and `--gradient-total`. They are exposed to Tailwind via `@theme inline` (`bg-ink`, `text-mist`, `text-glow`, …). There is no `tailwind.config`.
 - Fonts: `--font-display` Fraunces (headings), `--font-sans` Space Grotesk (body), `--font-mono` JetBrains Mono (use the `.num` class for figures and references).
 - Icons in the current UI are Unicode glyphs (✦ ↗ ⌘ ◈ ▶ ✓ ↓ →) wrapped in `aria-hidden="true"`.
 - Accessibility patterns in use: `aria-pressed` on toggle buttons, `role="switch"` + `aria-checked` on option switches, `aria-current="step"` on the active step, `aria-live="polite"` on the workflow and counters, labelled `<label className="field">` wrapping inputs, `autoComplete` set per field.
@@ -250,7 +273,7 @@ Pagination uses a moving `y` cursor. `ensureSpace(h)` adds a page and redraws th
 
 ## How-to recipes
 
-**Add or edit a service option**: edit `SERVICES` in the catalog constants. Pricing, defaults, the configuration UI, ledger, review and PDF all pick it up automatically. If you add a new service, also add an icon case to `serviceSymbol()` in `step-services.tsx` (it matches on `service.name`) and consider adding the new id to relevant `ADD_ONS[].triggers`.
+**Add or edit a service option**: edit `SERVICES` in the catalog constants. Pricing, the configuration UI, ledger, review and PDF all pick it up automatically. Don't reintroduce base prices or pre-set defaults unless asked. A counter starts at its `min`. If you add a new service, also add an icon case to `serviceSymbol()` in `step-services.tsx` (it matches on `service.name`) and consider adding the new id to relevant `ADD_ONS[].triggers`.
 
 **Add an add-on**: append to `ADD_ONS` with `triggers`. Nothing else is needed.
 
@@ -258,7 +281,7 @@ Pagination uses a moving `y` cursor. `ensureSpace(h)` adds a page and redraws th
 
 **Add a client field**: `ClientDetails` type + `EMPTY_CLIENT` (`quotation-app.tsx`) + `CLIENT_FIELDS` and `fieldAutoComplete` (`step-addons.tsx`) + `preparedForDetails` (`step-review.tsx`) + the `details` array in `quotation-pdf.ts`.
 
-**Add or remove a workflow step**: `STEPS` (`app.constants.ts`); the hard-coded `4` bounds and `isStepComplete` in `quotation-app.tsx`; the `step === N` rendering blocks; `workflow-footer.tsx` (`/ 04`, `step === 3` label, `step === 4` disable); the eyebrow numbers ("0N / …") in each step's `StepHeading`.
+**Add or remove a workflow step**: `STEPS` (`app.constants.ts`); `isStepComplete` in `quotation-app.tsx` (bounds come from `STEPS.length`); the `step === N` rendering blocks; `workflow-footer.tsx` (`/ 04`, `step === 3` label, `step === 4` disable); the eyebrow numbers ("0N / …") in each step's `StepHeading`.
 
 **Change PDF look**: `quotation-pdf.constants.ts` first, then the drawing code in `quotation-pdf.ts`. Test with many services selected to check page breaks.
 
@@ -268,14 +291,13 @@ Pagination uses a moving `y` cursor. `ensureSpace(h)` adds a page and redraws th
 
 These are places where the same fact is written more than once. Update every copy, or better, refactor it to a single source and then remove the entry here.
 
-- The base line label "Discovery, project management and QA" is hard-coded in `step-configuration.tsx` instead of using `BASE_ENGAGEMENT_NAME`.
 - The terms text in `step-review.tsx`'s terms card duplicates part of `QUOTATION_TERMS`.
 - The "Prepared for" detail-building logic is duplicated in `step-review.tsx` (`preparedForDetails`) and `quotation-pdf.ts`.
 - GST rate and labels are hard-coded in several places (see the recipe above).
 - `serviceSymbol()` matches on the display name, so renaming a service silently changes its icon to ▶.
 - `step-review.tsx` hard-codes `"en-IN"` for the date rather than using `APP_CONSTANTS.LOCALE`.
 - `ClientDetails` is defined in `lib/quotation-pdf.ts`, not in `types/`.
-- `step-configuration.tsx` reads counter values with `Number(value ?? option.defaultQuantity ?? 1)` but doesn't clamp them. `calculateQuote` does clamp, so the UI row amount and the quote can differ only if config holds an out-of-range value.
+- `QuotationLedger` still takes a `hasSelection` prop (services selected), but only for its empty-state message. Download availability comes from `quote.groups.length`.
 - `components/ui/button.tsx` exists but is unused. The app uses `.button` CSS classes.
 
 ---

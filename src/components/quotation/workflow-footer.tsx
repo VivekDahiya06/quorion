@@ -1,10 +1,10 @@
 export function WorkflowFooter({
   step,
-  selectedCount,
+  canContinue,
   onGoToStep,
 }: {
   step: number;
-  selectedCount: number;
+  canContinue: boolean;
   onGoToStep: (nextStep: number) => void;
 }) {
   return (
@@ -24,7 +24,7 @@ export function WorkflowFooter({
         type="button"
         className="button button-primary"
         onClick={() => onGoToStep(step + 1)}
-        disabled={step === 4 || (step === 1 && selectedCount === 0)}
+        disabled={step === 4 || !canContinue}
       >
         {step === 3 ? "Review quotation" : "Continue"}
         <span aria-hidden="true">→</span>

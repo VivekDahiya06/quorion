@@ -32,7 +32,11 @@ export function QuotationLedger({
             ✦
           </span>
           <strong>A blank canvas.</strong>
-          <p>Pick a service and your estimate will take shape here.</p>
+          <p>
+            {hasSelection
+              ? "Add features in Configuration and your estimate will take shape here."
+              : "Pick a service and your estimate will take shape here."}
+          </p>
         </div>
       ) : (
         <div className="ledger-groups">
@@ -80,7 +84,7 @@ export function QuotationLedger({
         type="button"
         className="button button-outline ledger-download"
         onClick={onDownload}
-        disabled={!hasSelection || isDownloading}
+        disabled={quote.groups.length === 0 || isDownloading}
       >
         <span aria-hidden="true">↓</span>
         {isDownloading ? "Preparing PDF…" : "Download PDF"}

@@ -9,6 +9,7 @@ import { getServiceDefaults } from "@/lib/quotation-catalog";
 import { StepServices } from "./quotation/steps/step-services";
 import { QuotationTopbar } from "./quotation/quotation-topbar";
 import { QuotationLedger } from "./quotation/quotation-ledger";
+import { STEPS } from "@/constants/app.constants";
 import { SERVICES } from "@/constants/quotation-catalog.constants";
 import type { QuoteConfig } from "@/types/quote-calculation.types";
 import { QuotationStepRail } from "./quotation/quotation-step-rail";
@@ -83,7 +84,7 @@ export default function QuotationApp() {
   };
 
   const downloadPdf = async () => {
-    if (!selected.length || !quoteDate || !reference) return;
+    if (!quote.groups.length || !quoteDate || !reference) return;
     setIsDownloading(true);
     setDownloadError("");
     try {
@@ -99,25 +100,45 @@ export default function QuotationApp() {
     }
   };
 
+  // Selected services that have no priced feature yet.
+  const unconfiguredServices = selected.filter(
+    (serviceId) => !quote.groups.some((group) => group.id === serviceId),
+  );
+
+  // Whether a step's requirements are met by the current state.
   const isStepComplete = (stepNumber: number) => {
     if (stepNumber === 1) return selected.length > 0;
-    if (stepNumber === 2) return selected.length > 0;
+    if (stepNumber === 2)
+      return selected.length > 0 && unconfiguredServices.length === 0;
     if (stepNumber === 3) return true;
     return false;
   };
 
+  // A step counts as done once it was passed with Continue and is still
+  // complete. Done steps form an unbroken chain from step 1, so editing an
+  // earlier step re-locks every step after it.
+  const doneSteps: number[] = [];
+  for (let stepNumber = 1; stepNumber <= STEPS.length; stepNumber += 1) {
+    if (!completedSteps.includes(stepNumber) || !isStepComplete(stepNumber))
+      break;
+    doneSteps.push(stepNumber);
+  }
+  const maxReachableStep = Math.min(STEPS.length, doneSteps.length + 1);
+
   const goToStep = (nextStep: number) => {
-    if (nextStep < 1 || nextStep > 4 || (!selected.length && nextStep > 1))
-      return;
-    if (nextStep === step + 1 && isStepComplete(step)) {
+    if (nextStep < 1 || nextStep > STEPS.length || nextStep === step) return;
+
+    const isAdvancing = nextStep === step + 1;
+    if (isAdvancing && step <= maxReachableStep && isStepComplete(step)) {
       setCompletedSteps((current) =>
         current.includes(step) ? current : [...current, step],
       );
+      setStep(nextStep);
+      return;
     }
-    setStep(nextStep);
-  };
 
-  const displayedCompleteSteps = completedSteps.filter(isStepComplete);
+    if (nextStep <= maxReachableStep) setStep(nextStep);
+  };
 
   return (
     <div className="app-shell">
@@ -127,8 +148,8 @@ export default function QuotationApp() {
       <main className="main-grid">
         <QuotationStepRail
           step={step}
-          completedSteps={displayedCompleteSteps}
-          selectedCount={selected.length}
+          completedSteps={doneSteps}
+          maxReachableStep={maxReachableStep}
           onGoToStep={goToStep}
         />
 
@@ -142,6 +163,7 @@ export default function QuotationApp() {
               selected={selected}
               config={config}
               activeService={activeService}
+              unconfiguredServices={unconfiguredServices}
               onSelectService={setActiveService}
               onChangeOption={changeOption}
             />
@@ -163,7 +185,6 @@ export default function QuotationApp() {
               client={client}
               reference={reference}
               quoteDate={quoteDate}
-              hasSelection={selected.length > 0}
               isDownloading={isDownloading}
               downloadError={downloadError}
               onDownload={() => void downloadPdf()}
@@ -172,7 +193,7 @@ export default function QuotationApp() {
 
           <WorkflowFooter
             step={step}
-            selectedCount={selected.length}
+            canContinue={isStepComplete(step)}
             onGoToStep={goToStep}
           />
         </section>

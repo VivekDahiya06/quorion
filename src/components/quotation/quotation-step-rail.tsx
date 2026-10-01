@@ -4,12 +4,12 @@ import { SectionEyebrow } from "./section-eyebrow";
 export function QuotationStepRail({
   step,
   completedSteps,
-  selectedCount,
+  maxReachableStep,
   onGoToStep,
 }: {
   step: number;
   completedSteps: number[];
-  selectedCount: number;
+  maxReachableStep: number;
   onGoToStep: (nextStep: number) => void;
 }) {
   return (
@@ -18,7 +18,8 @@ export function QuotationStepRail({
       <ol>
         {STEPS.map((item, index) => {
           const stepNumber = index + 1;
-          const reachable = selectedCount > 0 || stepNumber === 1;
+          const reachable =
+            stepNumber <= maxReachableStep || stepNumber === step;
           const isComplete = completedSteps.includes(stepNumber);
           return (
             <li key={item.title}>
